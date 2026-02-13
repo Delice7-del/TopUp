@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    /* Construction dashboard color palette */
+    --primary-color: #2c7a7b;  /* Teal from charts */
+    --primary-hover: #236061;
+    --secondary-teal: #4db8ba;  /* Light teal */
+    --dark-teal: #1a5557;
+    --accent-orange: #f59e42;  /* Orange from pie chart */
+    --accent-red: #dc2626;  /* Red from pie chart */
+    --bg-color: #b8d4d6;  /* Light blue-grey background */
+    --card-bg: #ffffff;
+    --sidebar-bg: #1e4a4d;  /* Dark teal sidebar */
+    --text-color: #1f2937;
+    --text-muted: #64748b;
+    --border-color: #d1d5db;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --radius: 0.5rem;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+h1 {
+    margin-top: 3rem;
+    font-weight: 600;
+    color: var(--dark-teal);
+    font-size: 2.25rem;
+    margin-bottom: 2rem;
+}
+
+h2 {
+    margin-top: 2rem;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--sidebar-bg);
+    margin-bottom: 1rem;
+}
+
+.topup-form {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 600px;
+    width: 90%;
+    border-top: 4px solid var(--primary-color);
+}
+
+.topup-form input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    min-width: 200px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.topup-form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(44, 122, 123, 0.15);
+}
+
+.topup-form button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.topup-form button:hover {
+    background-color: var(--primary-hover);
+}
+
+.topup-form button:active {
+    transform: translateY(1px);
+}
+
+#balances {
+    width: 90%;
+    max-width: 800px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: 3rem;
+    border-top: 4px solid var(--secondary-teal);
+}
+
+#balances th, #balances td {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#balances th {
+    background-color: var(--sidebar-bg);
+    color: #ffffff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+#balances tr:last-child td {
+    border-bottom: none;
+}
+
+#balances tr:hover td {
+    background-color: #f0f9f9;
+}
+
+/* Highlight animation with teal color */
+.highlight {
+    background-color: #b2f5ea !important;
+    transition: background-color 0.5s ease-out;
+}
+
+@media (max-width: 600px) {
+    .topup-form {
+        flex-direction: column;
+    }
+
+    .topup-form input, .topup-form button {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFID Top-Up Control Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --teal-primary: #2c7a7b;
+            --teal-light: #4db8ba;
+            --teal-dark: #1a5557;
+            --sidebar-dark: #1e4a4d;
+            --orange: #f59e42;
+            --red: #dc2626;
+            --yellow: #fbbf24;
+            --green: #10b981;
+            --bg-main: #b8d4d6;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-muted: #64748b;
+            --grid-line: rgba(30, 74, 77, 0.1);
+        }
+
+        body {
+            font-family: 'Jost', sans-serif;
+            background: linear-gradient(135deg, #b8d4d6 0%, #d4e8ea 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--sidebar-dark);
+            padding: 2rem 1.5rem;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Jost', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--teal-light);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .logo-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            margin-bottom: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            padding: 0.85rem 1.1rem;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(77, 184, 186, 0.15);
+            color: var(--teal-light);
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: var(--teal-primary);
+            color: white;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem 2.5rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header-title {
+            font-family: 'Jost', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--teal-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.75rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid var(--teal-primary);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-family: 'Jost', sans-serif;
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: var(--teal-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            color: var(--green);
+        }
+
+        .stat-change.negative {
+            color: var(--red);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-family: 'Jost', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--teal-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-subtitle {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Top-up Form */
+        .topup-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            padding: 0.85rem;
+            border: 2px solid var(--grid-line);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'Jost', sans-serif;
+            transition: border-color 0.3s;
+            background: #f8fafb;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--teal-primary);
+            background: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal-primary) 0%, var(--teal-light) 100%);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(44, 122, 123, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(44, 122, 123, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Activity Feed */
+        .activity-item {
+            padding: 1rem;
+            border-left: 3px solid var(--teal-light);
+            background: #f8fafb;
+            margin-bottom: 0.75rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .activity-item:hover {
+            background: white;
+            transform: translateX(5px);
+        }
+
+        .activity-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .activity-text {
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .activity-amount {
+            font-weight: 600;
+            color: var(--teal-primary);
+        }
+
+        /* Balances Table */
+        .balances-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .balances-table thead {
+            background: var(--sidebar-dark);
+            color: white;
+        }
+
+        .balances-table th {
+            padding: 0.85rem;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .balances-table td {
+            padding: 0.85rem;
+            border-bottom: 1px solid var(--grid-line);
+            font-size: 0.9rem;
+        }
+
+        .balances-table tbody tr {
+            transition: background 0.3s;
+        }
+
+        .balances-table tbody tr:hover {
+            background: #f8fafb;
+        }
+
+        .balance-value {
+            font-family: 'Jost', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--teal-primary);
+        }
+
+        .highlight {
+            background: rgba(77, 184, 186, 0.2) !important;
+            animation: highlightFade 1.5s ease-out;
+        }
+
+        @keyframes highlightFade {
+            0% { background: rgba(77, 184, 186, 0.5) !important; }
+            100% { background: rgba(77, 184, 186, 0.2) !important; }
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-content {
+                margin-left: 240px;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">RFID HQ</div>
+        <div class="logo-subtitle">Control Center</div>
+        <nav>
+            <div class="nav-item active">
+                <span class="nav-icon">📊</span>
+                Dashboard
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">💳</span>
+                Cards
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">📈</span>
+                Analytics
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                Settings
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">Operations Dashboard</div>
+            <div class="header-actions">
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    System Online
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Cards</div>
+                <div class="stat-value" id="totalCards">0</div>
+                <div class="stat-change positive">+12 this week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Balance</div>
+                <div class="stat-value" id="totalBalance">$0</div>
+                <div class="stat-change positive">+$2,450</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Top-ups Today</div>
+                <div class="stat-value" id="topupsToday">0</div>
+                <div class="stat-change positive">+18%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg. Balance</div>
+                <div class="stat-value" id="avgBalance">$0</div>
+                <div class="stat-change negative">-5%</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Charts Section -->
+            <div>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Top-up Activity</div>
+                            <div class="card-subtitle">Last 7 days</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Active Cards</div>
+                    </div>
+                    <table class="balances-table" id="balancesTable">
+                        <thead>
+                            <tr>
+                                <th>Card UID</th>
+                                <th>Balance</th>
+                                <th>Last Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sidebar Section -->
+            <div>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <div class="card-title">Quick Top-Up</div>
+                    </div>
+                    <form class="topup-form" id="topupForm">
+                        <div class="form-group">
+                            <label class="form-label">Card UID</label>
+                            <input type="text" class="form-input" id="uid" placeholder="Enter card UID" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Amount ($)</label>
+                            <input type="number" class="form-input" id="amount" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Process Top-Up</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Recent Activity</div>
+                            <div class="card-subtitle">Live feed</div>
+                        </div>
+                    </div>
+                    <div id="activityFeed">
+                        <div class="activity-item">
+                            <div class="activity-time">Just now</div>
+                            <div class="activity-text">System initialized</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = new WebSocket("ws://localhost:8080/ws");
+        const balanceData = {};
+        let activityLog = [];
+        let topupsToday = 0;
+
+        // Chart setup
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Top-ups',
+                    data: [12, 19, 15, 25, 22, 30, 28],
+                    borderColor: '#2c7a7b',
+                    backgroundColor: 'rgba(44, 122, 123, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(30, 74, 77, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // WebSocket handlers
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                const data = msg.data;
+
+                if (data.uid && (data.new_balance !== undefined || data.balance !== undefined)) {
+                    const newBalance = data.new_balance ?? data.balance;
+                    const oldBalance = balanceData[data.uid];
+                    balanceData[data.uid] = {
+                        balance: newBalance,
+                        lastActivity: new Date().toLocaleTimeString()
+                    };
+
+                    if (oldBalance !== undefined) {
+                        addActivity(`Card ${data.uid} topped up by $${(newBalance - oldBalance.balance).toFixed(2)}`);
+                        topupsToday++;
+                    }
+
+                    renderBalances(data.uid, oldBalance !== newBalance);
+                    updateStats();
+                }
+            } catch (err) {
+                console.error("Invalid WebSocket message:", err);
+            }
+        };
+
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+            addActivity("Connected to RFID system");
+        };
+
+        ws.onclose = () => {
+            addActivity("Disconnected from system", true);
+        };
+
+        // Render balances table
+        function renderBalances(highlightUid = null, highlight = false) {
+            const tbody = document.querySelector('#balancesTable tbody');
+            tbody.innerHTML = '';
+
+            for (let uid in balanceData) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${uid}</td>
+                    <td><span class="balance-value">$${balanceData[uid].balance.toFixed(2)}</span></td>
+                    <td>${balanceData[uid].lastActivity}</td>
+                `;
+
+                if (highlight && uid === highlightUid) {
+                    tr.classList.add('highlight');
+                    setTimeout(() => tr.classList.remove('highlight'), 1500);
+                }
+
+                tbody.appendChild(tr);
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            const totalCards = Object.keys(balanceData).length;
+            const totalBalance = Object.values(balanceData).reduce((sum, card) => sum + card.balance, 0);
+            const avgBalance = totalCards > 0 ? totalBalance / totalCards : 0;
+
+            document.getElementById('totalCards').textContent = totalCards;
+            document.getElementById('totalBalance').textContent = `$${totalBalance.toFixed(2)}`;
+            document.getElementById('topupsToday').textContent = topupsToday;
+            document.getElementById('avgBalance').textContent = `$${avgBalance.toFixed(2)}`;
+        }
+
+        // Add activity to feed
+        function addActivity(text, isError = false) {
+            const feed = document.getElementById('activityFeed');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="activity-time">${new Date().toLocaleTimeString()}</div>
+                <div class="activity-text">${text}</div>
+            `;
+
+            feed.insertBefore(item, feed.firstChild);
+
+            // Keep only last 10 items
+            while (feed.children.length > 10) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('topupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const uid = document.getElementById('uid').value.trim();
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            if (!uid || !amount || amount <= 0) {
+                addActivity('Invalid top-up attempt', true);
+                return;
+            }
+
+            try {
+                const res = await fetch("http://localhost:8080/topup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ uid, amount })
+                });
+
+                const result = await res.json();
+
+                if (result.new_balance !== undefined) {
+                    const oldBalance = balanceData[uid]?.balance || 0;
+                    balanceData[uid] = {
+                        balance: result.new_balance,
+                        lastActivity: new Date().toLocaleTimeString()
+                    };
+                    renderBalances(uid, true);
+                    updateStats();
+                    addActivity(`Successfully topped up card ${uid} by $${amount.toFixed(2)}`);
+                    topupsToday++;
+                }
+
+                document.getElementById('uid').value = '';
+                document.getElementById('amount').value = '';
+            } catch (err) {
+                console.error(err);
+                addActivity('Top-up failed - connection error', true);
+            }
+        });
+
+        // Initialize
+        updateStats();
+    </script>
+</body>
+</html>
